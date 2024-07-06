@@ -13,6 +13,8 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+import requests 
+
 
 
 # Agora você pode usar norm.ppf() na sua função calcular_var_parametrico
@@ -638,14 +640,14 @@ def calcular_correlacao_covariancia(carteira):
 # Função para plotar a matriz de correlação
 def plotar_matriz_correlacao(matriz_corr):
     st.header('Matriz de Correlação')
-    fig, ax = plt.subplots(figsize=(10, 8))  # Ajuste o tamanho da figura aqui
+    fig, ax = plt.subplots(figsize=(14, 10))  # Ajuste o tamanho da figura aqui
     sns.heatmap(matriz_corr, annot=True, ax=ax)
     st.pyplot(fig)
 
 # Função para plotar a matriz de covariância
 def plotar_matriz_covariancia(matriz_cov):
     st.header('Matriz de Covariância')
-    fig, ax = plt.subplots(figsize=(10, 8))  # Ajuste o tamanho da figura aqui
+    fig, ax = plt.subplots(figsize=(14, 10))  # Ajuste o tamanho da figura aqui
     sns.heatmap(matriz_cov, annot=True, ax=ax)
     st.pyplot(fig)
 
@@ -891,6 +893,75 @@ def plotar_fronteira_eficiente(resultados, risco_otimo, retorno_otimo, pesos_oti
 
     st.pyplot(fig)
 
+def plotar_comparacao_carteira_ibov(carteira):
+    # Data de início e fim para baixar dados
+    data_fim = pd.Timestamp.now().date()
+    data_inicio = data_fim - pd.DateOffset(months=36)  # 36 meses atrás
+
+    # Lista para armazenar os dados de retorno acumulado de cada ativo
+    retorno_acumulado_ativos = []
+    # Baixar dados históricos ajustados do Yahoo Finance para cada ativo na carteira
+    for index, row in carteira_com_pesos.iterrows():
+        ativo = row['Ativo']
+        peso = row['Peso']
+        try:
+            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            if dados.empty:
+                st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker ou tente novamente mais tarde.")
+            else:
+                # Preencher dados faltantes com interpolação linear
+                dados = dados.interpolate(method='linear')
+                
+                # Garantir que todos os dados tenham o mesmo índice de datas
+                datas_completas = pd.date_range(start=data_inicio, end=data_fim, freq='D')
+                dados = dados.reindex(datas_completas)
+                
+                # Preencher novamente dados faltantes após a reindexação
+                dados = dados.interpolate(method='linear')
+                
+                # Calcular o retorno acumulado do ativo
+                dados[f'Retorno_Acumulado_{ativo}'] = (1 + dados.pct_change()).cumprod()
+                
+                # Salvar o retorno acumulado do ativo na lista
+                retorno_acumulado_ativos.append(dados[f'Retorno_Acumulado_{ativo}'] * peso)
+                
+        except Exception as e:
+            st.error(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
+
+    # Calcular o retorno acumulado da carteira
+    if retorno_acumulado_ativos:
+        retorno_acumulado_carteira = pd.concat(retorno_acumulado_ativos, axis=1).sum(axis=1)
+        retorno_acumulado_carteira.dropna(inplace=True)
+        
+        # Obter dados históricos ajustados do IBOV
+        try:
+            dados_ibov = yf.download('^BVSP', start=data_inicio, end=data_fim)['Adj Close']
+            dados_ibov = dados_ibov.interpolate(method='linear')
+            dados_ibov = dados_ibov.reindex(retorno_acumulado_carteira.index)
+            dados_ibov = dados_ibov.interpolate(method='linear')
+            retorno_acumulado_ibov = (1 + dados_ibov.pct_change()).cumprod()
+        except Exception as e:
+            st.error(f"Erro ao obter dados para o IBOV: {str(e)}")
+            return
+
+        # Plotar o gráfico de comparação
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.plot(retorno_acumulado_carteira.index, retorno_acumulado_carteira,  color='steelblue', linewidth=2, label='Carteira')
+        ax.plot(retorno_acumulado_ibov.index, retorno_acumulado_ibov, color='orange', linewidth=2, label='IBOV')
+
+        # Estilo dos eixos e legendas
+        ax.set_xlabel('Data', fontsize=12)
+        ax.set_ylabel('Retorno Acumulado', fontsize=12)
+        ax.legend(loc='upper left', fontsize=12)
+
+        # Título do gráfico
+        plt.title('Comparação do Retorno Acumulado da Carteira e IBOV nos Últimos 36 Meses', fontsize=14)
+        plt.grid(True)
+        plt.tight_layout()
+        st.pyplot(fig)
+    else:
+        st.warning("Não foi possível calcular o retorno acumulado da carteira devido a problemas com os dados dos ativos.")
+
 
 # Exemplo de uso na página 'Resultados'
 if pagina == 'Resultados':
@@ -904,6 +975,9 @@ if pagina == 'Resultados':
     
      # Calcular o beta da carteira
     beta_carteira = calcular_beta_carteira(carteira)
+
+    
+
 
     calcular_plotar_drawdown_carteira(carteira)
     
@@ -940,6 +1014,8 @@ if pagina == 'Resultados':
     ax_cov.set_title('Matriz de Covariância Escalada')
     st.pyplot(fig_cov)
 
+    plotar_comparacao_carteira_ibov(carteira)
+    
     # Chamar a função para calcular e plotar a variância da carteira
     variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
         
