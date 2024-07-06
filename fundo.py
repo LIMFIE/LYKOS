@@ -665,7 +665,7 @@ def calcular_e_plotar_variancia(carteira, matriz_cov):
     variancia_carteira = np.dot(pesos.T, np.dot(matriz_cov, pesos))
 
     # Simular dados de variância ao longo dos últimos 60 meses (substitua com dados reais)
-    variancias = np.random.normal(variancia_carteira, 0.05 * variancia_carteira, size=60)
+    variancias = np.random.normal(variancia_carteira, 0.05 * variancia_carteira, size=36)
 
     # Criar o gráfico de variância usando Plotly
     fig = go.Figure()
@@ -698,7 +698,7 @@ def calcular_e_plotar_variancia(carteira, matriz_cov):
 
     # Configurações do layout
     fig.update_layout(
-        title='Variância da Carteira nos Últimos 60 Meses',
+        title='Variância da Carteira nos Últimos 36 Meses',
         xaxis_title='Meses',
         yaxis_title='Variância',
         legend_title='Legenda',
