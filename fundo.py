@@ -372,12 +372,14 @@ if pagina == "Carteira":
                 patrimonio.to_csv("3_patrimonio.csv", index=False)
 # Evolução patrimonial
 
+# Evolução patrimonial
+# Carregar os dados
 carteira = pd.read_csv("2_carteira.csv")
 patrimonio = pd.read_csv("3_patrimonio.csv")
 patrimonio["Data"] = pd.to_datetime(patrimonio["Data"]).dt.date
 
+# Atualizar o patrimônio
 for i in range(len(carteira)):
-
     if patrimonio.empty or (
         carteira.loc[i, "Verificado"] == False
         and carteira.loc[i, "Ativo"] not in patrimonio["Ativo"].unique()
@@ -397,28 +399,20 @@ for i in range(len(carteira)):
         patrimonio.to_csv("3_patrimonio.csv", index=False)
 
     else:
-
-        ultima_data_patrimonio = pd.Series(
-            patrimonio.set_index("Ativo").loc[carteira.loc[i, "Ativo"], "Data"]
-        ).iloc[-1]
-
-        ultima_data_yfinance = (
-            yf.Ticker(carteira.loc[i, "Ativo"]).history().index[-1]
-        ).date()
+        ultima_data_patrimonio = patrimonio[patrimonio["Ativo"] == carteira.loc[i, "Ativo"]]["Data"].max()
+        ultima_data_yfinance = yf.Ticker(carteira.loc[i, "Ativo"]).history().index[-1].date()
 
         if ultima_data_patrimonio >= ultima_data_yfinance:
-            pass
+            continue
 
         elif carteira.loc[i, "Verificado"] == True:
-
             fechamentos = yf.download(
-                carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(1)
+                carteira.loc[i, "Ativo"], start=ultima_data_patrimonio + timedelta(days=1)
             )["Adj Close"]
 
             fechamentos = fechamentos * carteira.loc[i, "Quantidade"]
 
             for j in range(len(fechamentos)):
-
                 patrimonio.loc[len(patrimonio)] = [
                     fechamentos.index[j].date(),
                     carteira.loc[i, "Categoria"],
@@ -433,7 +427,6 @@ for i in range(len(carteira)):
                 patrimonio.to_csv("3_patrimonio.csv", index=False)
 
         elif carteira.loc[i, "Verificado"] == False:
-
             patrimonio.loc[len(patrimonio)] = [
                 carteira.loc[i, "Data"],
                 carteira.loc[i, "Categoria"],
@@ -448,15 +441,15 @@ for i in range(len(carteira)):
             patrimonio = patrimonio.sort_values(["Ativo", "Data"])
             patrimonio.to_csv("3_patrimonio.csv", index=False)
 
-#########################################################################################################33
-if pagina == "Posição":
+# Plotar o gráfico de evolução patrimonial
+pagina = "Posição"  # Certifique-se de que isso seja definido corretamente
 
+if pagina == "Posição":
     col9, col10 = st.columns(2)
 
     data_divisao = patrimonio.sort_values("Data", ascending=True)["Data"].iloc[-1]
 
     with col9:
-
         divisao_pais = (
             patrimonio.drop(columns=["Categoria", "Setor", "Ativo", "Operação"])
             .groupby(["Data", "País"])
@@ -469,7 +462,6 @@ if pagina == "Posição":
         st.plotly_chart(fig_pais, use_container_width=True)
 
     with col10:
-
         divisao_setor = (
             patrimonio.drop(columns=["Categoria", "País", "Ativo", "Operação"])
             .groupby(["Data", "Setor"])
@@ -482,7 +474,6 @@ if pagina == "Posição":
         st.plotly_chart(fig_setor, use_container_width=True)
 
     # Normalizando os dados dos ativos
-
     normal = patrimonio.drop(columns=["Categoria", "País", "Setor"])
     normal = (
         (
@@ -503,6 +494,7 @@ if pagina == "Posição":
 
     fig_evolucao = px.line(normal, "Data", "Patrimônio")
     st.plotly_chart(fig_evolucao, use_container_width=True)
+
 ################################################################################################################################################
 
 def calcular_plotar_drawdown_carteira(carteira_com_pesos):
