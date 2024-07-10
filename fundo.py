@@ -337,7 +337,7 @@ if pagina == "Carteira":
 
             elif carteira.loc[i, "Verificado"] == True:
                 fechamentos = yf.download(
-                    carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(1)
+                    carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(days=1)
                 )["Adj Close"]
 
                 fechamentos = fechamentos * carteira.loc[i, "Quantidade"]
