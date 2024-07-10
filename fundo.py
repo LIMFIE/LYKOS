@@ -370,10 +370,8 @@ if pagina == "Carteira":
                 carteira.to_csv("2_carteira.csv", index=False)
                 patrimonio = patrimonio.sort_values(["Ativo", "Data"])
                 patrimonio.to_csv("3_patrimonio.csv", index=False)
-# Evolução patrimonial
 
 # Evolução patrimonial
-# Carregar os dados
 carteira = pd.read_csv("2_carteira.csv")
 patrimonio = pd.read_csv("3_patrimonio.csv")
 patrimonio["Data"] = pd.to_datetime(patrimonio["Data"]).dt.date
@@ -440,9 +438,6 @@ for i in range(len(carteira)):
             carteira.to_csv("2_carteira.csv", index=False)
             patrimonio = patrimonio.sort_values(["Ativo", "Data"])
             patrimonio.to_csv("3_patrimonio.csv", index=False)
-
-# Plotar o gráfico de evolução patrimonial
-pagina = "Posição"  # Certifique-se de que isso seja definido corretamente
 
 if pagina == "Posição":
     col9, col10 = st.columns(2)
