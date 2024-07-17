@@ -376,6 +376,20 @@ carteira = pd.read_csv("2_carteira.csv")
 patrimonio = pd.read_csv("3_patrimonio.csv")
 patrimonio["Data"] = pd.to_datetime(patrimonio["Data"]).dt.date
 
+# Multiplica Posições Short por -1, para calcular o patrimônio total em cada data
+quantidade_posicoes = len(patrimonio["Patrimônio"])
+for i in range(quantidade_posicoes):
+    
+    if patrimonio["Operação"][i] == "Long":
+        patrimonio.loc[i ,"Patrimônio"] *= 1
+    
+    elif patrimonio["Operação"][i] == "Short":
+        patrimonio.loc[i ,"Patrimônio"] *= -1
+    
+    else:
+        "Operação não é do tipo Long\Short, impossível de gerar o gráfico"
+
+
 # Atualizar o patrimônio
 for i in range(len(carteira)):
     if patrimonio.empty or (
@@ -468,26 +482,11 @@ if pagina == "Posição":
         fig_setor = px.pie(divisao_setor, "Setor", "Patrimônio")
         st.plotly_chart(fig_setor, use_container_width=True)
 
-    # Normalizando os dados dos ativos
-    normal = patrimonio.drop(columns=["Categoria", "País", "Setor"])
-    normal = (
-        (
-            (
-                normal.groupby(["Ativo", "Operação", "Data"]).sum()
-                / normal.groupby(["Ativo", "Operação"]).first()
-            )
-            - 1
-        )
-        .drop(columns="Data")
-        .reset_index()
-    )
+    # Soma o patrimônio em cada data, retornando uma série temporal com o valor do patrimônio em cada data
+    patrimonio = patrimonio.groupby("Data").sum().reset_index()
 
-    normal.loc[normal["Operação"] == "Short", "Patrimônio"] *= -1
-    normal = (
-        normal.drop(columns=["Ativo", "Operação"]).groupby("Data").sum().reset_index()
-    )
-
-    fig_evolucao = px.line(normal, "Data", "Patrimônio")
+    # faz e desenha o gráfico de evolução do patrimônio
+    fig_evolucao = px.line(patrimonio, "Data", "Patrimônio")
     st.plotly_chart(fig_evolucao, use_container_width=True)
 
 ################################################################################################################################################
