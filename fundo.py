@@ -50,12 +50,13 @@ if "3_patrimonio.csv" not in os.listdir():
         "Patrimônio": [],
     }
     patrimonio = pd.DataFrame(dict1).set_index("Data")
-    patrimonio.to_csv("3_patrimonio.csv")
+    patrimonio.to_csv(r"C:\Users\Vitor\Desktop\FUNDO\3_patrimonio.csv")
 
 # Leitura de CSV
 
-df_ativos = pd.read_csv("1_ativos.csv")
+df_ativos = pd.read_csv(r"C:\Users\Vitor\Desktop\FUNDO\1_ativos.csv")
 carteira = pd.read_csv("2_carteira.csv")
+
 
 # Configuração básica da página
 
@@ -302,14 +303,19 @@ if pagina == "Carteira":
     # Visualização das posições na carteira
     st.dataframe(carteira.drop(columns="Verificado"), use_container_width=True)
 
-    # Evolução patrimonial
-    for i in range(len(carteira)):
 
+
+    # Evolução patrimonial
+
+    for i in range(len(carteira)): # realiza o loop a seguir para cada aporte registrado em 2_carteria.csv 
+
+        # adiciona o i-ésimo ativo no arquivo 3_patrimonio.csv, caso o aporte não esteja verificado, ou caso o arquivo esteja vazio. 
         if patrimonio.empty or (
-            carteira.loc[i, "Verificado"] == False
+            carteira.loc[i, "Verificado"] == False 
             and carteira.loc[i, "Ativo"] not in patrimonio["Ativo"].unique()
         ):
-            patrimonio.loc[len(patrimonio)] = [
+            # adiciona as informações sobre o i-ésimo aporte no arquivo 3_patrimonio.csv
+            patrimonio.loc[len(patrimonio)] = [ 
                 carteira.loc[i, "Data"],
                 carteira.loc[i, "Categoria"],
                 carteira.loc[i, "País"],
@@ -319,30 +325,34 @@ if pagina == "Carteira":
                 (carteira.loc[i, "Quantidade"] * carteira.loc[i, "Preço"]),
             ]
 
-            carteira.loc[i, "Verificado"] = True
+            carteira.loc[i, "Verificado"] = True # Muda o status do aporte para verificado e atualiza os respectivos arquivos
             carteira.to_csv("2_carteira.csv", index=False)
             patrimonio.to_csv("3_patrimonio.csv", index=False)
 
+        # atualiza o valor patrimonial caso o ativo esteja verificado
         else:
-            ultima_data_patrimonio = pd.Series(
+            # ultima data do ativo i em patrimonio 
+            ultima_data_patrimonio = pd.Series( 
                 patrimonio.set_index("Ativo").loc[carteira.loc[i, "Ativo"], "Data"]
             ).iloc[-1]
-
+            # ultima data do ativo i extraida do yahoo finance
             ultima_data_yfinance = (
                 yf.Ticker(carteira.loc[i, "Ativo"]).history().index[-1]
             ).date()
-
-            if ultima_data_patrimonio >= ultima_data_yfinance:
+        
+            # confere se a ultima data do ativo em 3_patrimonio.csv é mais antiga (maior) que a última data do yahoo finance
+            if ultima_data_patrimonio >= ultima_data_yfinance: 
                 pass
-
+            # confere se o aporte foi verificado e extrai os preços de fechamento ajustados do período entre a o dia após a ultima data do patrimonio e a ultima data do yahoo finance
             elif carteira.loc[i, "Verificado"] == True:
                 fechamentos = yf.download(
                     carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(days=1)
                 )["Adj Close"]
 
-                fechamentos = fechamentos * carteira.loc[i, "Quantidade"]
+                fechamentos = fechamentos * carteira.loc[i, "Quantidade"] # calcula o valor do patrimonio para cada dia do período
 
-                for j in range(len(fechamentos)):
+                # atualiza 3_patrimonio.csv com os últimos dados de patrimonio calculados na etapa anterior
+                for j in range(len(fechamentos)): 
                     patrimonio.loc[len(patrimonio)] = [
                         fechamentos.index[j].date(),
                         carteira.loc[i, "Categoria"],
@@ -353,10 +363,11 @@ if pagina == "Carteira":
                         fechamentos.iloc[j],
                     ]
 
-                    patrimonio = patrimonio.sort_values(["Ativo", "Data"])
+                    patrimonio = patrimonio.sort_values(["Ativo", "Data"]) # ordena o DataFrame patrimonio em quesito de Datas e Ativos
                     patrimonio.to_csv("3_patrimonio.csv", index=False)
-
-            elif carteira.loc[i, "Verificado"] == False:
+            
+            # adiciona as informações sobre o i-ésimo aporte no arquivo 3_patrimonio.csv
+            elif carteira.loc[i, "Verificado"] == False: 
                 patrimonio.loc[len(patrimonio)] = [
                     carteira.loc[i, "Data"],
                     carteira.loc[i, "Categoria"],
@@ -370,6 +381,7 @@ if pagina == "Carteira":
                 carteira.to_csv("2_carteira.csv", index=False)
                 patrimonio = patrimonio.sort_values(["Ativo", "Data"])
                 patrimonio.to_csv("3_patrimonio.csv", index=False)
+    
 
 # Evolução patrimonial
 carteira = pd.read_csv("2_carteira.csv")
@@ -387,15 +399,18 @@ for i in range(quantidade_posicoes):
         patrimonio.loc[i ,"Patrimônio"] *= -1
     
     else:
-        "Operação não é do tipo Long\Short, impossível de gerar o gráfico"
+       r"Operação não é do tipo Long\Short, impossível de gerar o gráfico"
 
 
 # Atualizar o patrimônio
-for i in range(len(carteira)):
+for i in range(len(carteira)): # realiza o loop a seguir para cada aporte registrado em 2_carteria.csv
+
+    # adiciona o i-ésimo ativo no arquivo 3_patrimonio.csv, caso o aporte não esteja verificado, ou caso o arquivo esteja vazio. 
     if patrimonio.empty or (
         carteira.loc[i, "Verificado"] == False
         and carteira.loc[i, "Ativo"] not in patrimonio["Ativo"].unique()
     ):
+        # adiciona as informações sobre o i-ésimo aporte no arquivo 3_patrimonio.csv
         patrimonio.loc[len(patrimonio)] = [
             carteira.loc[i, "Data"],
             carteira.loc[i, "Categoria"],
@@ -406,24 +421,30 @@ for i in range(len(carteira)):
             (carteira.loc[i, "Quantidade"] * carteira.loc[i, "Preço"]),
         ]
 
-        carteira.loc[i, "Verificado"] = True
+        carteira.loc[i, "Verificado"] = True # Muda o status do aporte para verificado e atualiza os respectivos arquivos
         carteira.to_csv("2_carteira.csv", index=False)
         patrimonio.to_csv("3_patrimonio.csv", index=False)
 
     else:
+         # ultima data do ativo i em patrimonio
         ultima_data_patrimonio = patrimonio[patrimonio["Ativo"] == carteira.loc[i, "Ativo"]]["Data"].max()
+
+         # ultima data do ativo i extraida do yahoo finance
         ultima_data_yfinance = yf.Ticker(carteira.loc[i, "Ativo"]).history().index[-1].date()
 
+        # confere se a ultima data do ativo em 3_patrimonio.csv é mais antiga (maior) que a última data do yahoo finance
         if ultima_data_patrimonio >= ultima_data_yfinance:
             continue
 
+        # confere se o aporte foi verificado e extrai os preços de fechamento ajustados do período entre a o dia após a ultima data do patrimonio e a ultima data do yahoo finance
         elif carteira.loc[i, "Verificado"] == True:
             fechamentos = yf.download(
                 carteira.loc[i, "Ativo"], start=ultima_data_patrimonio + timedelta(days=1)
             )["Adj Close"]
 
-            fechamentos = fechamentos * carteira.loc[i, "Quantidade"]
-
+            fechamentos = fechamentos * carteira.loc[i, "Quantidade"]  # calcula o valor do patrimonio para cada dia do período
+            
+            # atualiza 3_patrimonio.csv com os últimos dados de patrimonio calculados na etapa anterior
             for j in range(len(fechamentos)):
                 patrimonio.loc[len(patrimonio)] = [
                     fechamentos.index[j].date(),
@@ -435,9 +456,10 @@ for i in range(len(carteira)):
                     fechamentos.iloc[j],
                 ]
 
-                patrimonio = patrimonio.sort_values(["Ativo", "Data"])
+                patrimonio = patrimonio.sort_values(["Ativo", "Data"]) # ordena o DataFrame patrimonio em quesito de Datas e Ativos
                 patrimonio.to_csv("3_patrimonio.csv", index=False)
 
+        # adiciona as informações sobre o i-ésimo aporte no arquivo 3_patrimonio.csv
         elif carteira.loc[i, "Verificado"] == False:
             patrimonio.loc[len(patrimonio)] = [
                 carteira.loc[i, "Data"],
@@ -482,14 +504,55 @@ if pagina == "Posição":
         fig_setor = px.pie(divisao_setor, "Setor", "Patrimônio")
         st.plotly_chart(fig_setor, use_container_width=True)
 
-    # Soma o patrimônio em cada data, retornando uma série temporal com o valor do patrimônio em cada data
-    patrimonio = patrimonio.groupby("Data").sum().reset_index()
+    carteira = carteira.set_index("Data")
+    quantidades = (carteira["Quantidade"] * carteira["Preço"]).groupby("Data").sum() # acha o valor do patrimônio para cada data em 2_carteira.csv
+    data_inicio = quantidades.index[0] # define a data de ínicio de extração de dados como a primeira data em 2_carteira.csv
+    data_atual = datetime.now()
+    dados_ibov = yf.download("^BVSP",data_inicio,data_atual)["Adj Close"] # extrai os dados do Ibovespa para cáclulo do patrimônio
+    # substitui os valores de patrimônio em "quantidades" por multiplos do ibovespa do mesmo valor
+    for data in quantidades.index:
+        quantidades[data] = quantidades[data] / dados_ibov[data] # por exemplo: se uma "cota" do IBOV vale 1000 e temos 1.000.000 de patrimônio, temos 1000 cotas do ibov de patrimônio 
 
+    quantidades = quantidades.cumsum() # ajusta os valores para refletir a evolução da quantidade de IBOV
+    numero_iteracoes = len(quantidades) - 1
+    patrimonio_total = pd.Series()
+    # calcula a evolução do patrimonio se ele fosse investido ibovespa
+    # primeiramente calculamos a evolução para as datas em carteira  
+    for i in range(numero_iteracoes):
+        data_inicial = quantidades.index[i] # data da vez
+        data_final = quantidades.index[i+1] # data seguinte
+    
+        dados_periodo = dados_ibov[data_inicial : data_final] # dados de preço do ibovespa entre as datas de carteira
+        patrimonio_periodo = dados_periodo * quantidades[data_inicial] # calcula a evolução do patrimonio desde a data da vez até a seguinte
+        if len(patrimonio_total.index) == 0:  
+           patrimonio_total = patrimonio_periodo    
+        else:    
+         patrimonio_total = pd.concat([patrimonio_total,patrimonio_periodo])
+    
+
+    # repete o processo anterior usando a ultima data de 2_carteira.csv e a data atual
+    data_final = quantidades.index[-1]
+    dados_periodo = dados_ibov[data_final:data_atual] 
+    patrimonio_periodo = dados_periodo * quantidades[data_final]
+
+    patrimonio_total = pd.concat([patrimonio_total,patrimonio_periodo]).reset_index()
+    patrimonio_total = patrimonio_total.groupby("index").last() # retira linhas com indices repetidos 
+
+
+    # Soma o patrimônio em cada data, retornando uma série temporal com o valor do patrimônio em cada data
+    patrimonio = patrimonio.groupby("Data").sum().reset_index(drop=True)
+    patrimonio_total.reset_index(inplace=True)
+    
+    patrimonio_final = pd.concat([patrimonio_total,patrimonio],axis=1)   
+    patrimonio_final.dropna(inplace=True)
+    patrimonio_final.rename(columns={"index":"Data", 0:"Ibovespa", "Patrimônio":"Carteira"},inplace=True)
     # faz e desenha o gráfico de evolução do patrimônio
-    fig_evolucao = px.line(patrimonio, "Data", "Patrimônio")
+    fig_evolucao = px.line(patrimonio_final, x="Data", y=["Carteira","Ibovespa"])
+    fig_evolucao.update_layout(title_font_size=35,title_text="Evolução Patrimonial",title_automargin=True,title_yref="paper",xaxis_title="Data",yaxis_title="Patrimônio (R$)")
+    
+    #ibov_evolucao = px.line(patrimonio_total, "Date", "Adj Close")
     st.plotly_chart(fig_evolucao, use_container_width=True)
 
-################################################################################################################################################
 
 def calcular_plotar_drawdown_carteira(carteira_com_pesos):
     # Data de início e fim para baixar dados
