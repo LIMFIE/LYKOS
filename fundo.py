@@ -50,11 +50,11 @@ if "3_patrimonio.csv" not in os.listdir():
         "Patrimônio": [],
     }
     patrimonio = pd.DataFrame(dict1).set_index("Data")
-    patrimonio.to_csv(r"C:\Users\Vitor\Desktop\FUNDO\3_patrimonio.csv")
+    patrimonio.to_csv(r"C:\Users\emanu\OneDrive\Área de Trabalho\LYKOS LONG FIA\3_patrimonio.csv")
 
 # Leitura de CSV
 
-df_ativos = pd.read_csv(r"C:\Users\Vitor\Desktop\FUNDO\1_ativos.csv")
+df_ativos = pd.read_csv(r"C:\Users\emanu\OneDrive\Área de Trabalho\LYKOS LONG FIA\1_ativos.csv")
 carteira = pd.read_csv("2_carteira.csv")
 
 
@@ -837,7 +837,7 @@ def calcular_beta_carteira(carteira, ticker_referencia='^BVSP'):
 
 
 # Configuração para desativar o aviso PyplotGlobalUseWarning
-st.set_option('deprecation.showPyplotGlobalUse', False)
+#st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Função para calcular os retornos da carteira
 def calcular_retornos_carteira(carteira, data_inicio, data_fim):
