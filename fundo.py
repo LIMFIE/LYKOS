@@ -50,11 +50,11 @@ if "3_patrimonio.csv" not in os.listdir():
         "Patrimônio": [],
     }
     patrimonio = pd.DataFrame(dict1).set_index("Data")
-    patrimonio.to_csv(r"C:\Users\emanu\OneDrive\Área de Trabalho\LYKOS LONG FIA\3_patrimonio.csv")
+    patrimonio.to_csv(r"3_patrimonio.csv")
 
 # Leitura de CSV
 
-df_ativos = pd.read_csv(r"C:\Users\emanu\OneDrive\Área de Trabalho\LYKOS LONG FIA\1_ativos.csv")
+df_ativos = pd.read_csv(r"1_ativos.csv")
 carteira = pd.read_csv("2_carteira.csv")
 
 
