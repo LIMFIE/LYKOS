@@ -50,7 +50,7 @@ if "3_patrimonio.csv" not in os.listdir():
         "Patrimônio": [],
     }
     patrimonio = pd.DataFrame(dict1).set_index("Data")
-    patrimonio.to_csv(r"3_patrimonio.csv")
+    patrimonio.to_csv(r"C:\Users\emanu\OneDrive\Área de Trabalho\LYKOS LONG FIA\3_patrimonio.csv")
 
 # Leitura de CSV
 
@@ -300,9 +300,21 @@ if pagina == "Carteira":
     ]
     carteira = carteira.reindex(columns=ordem)
 
-    # Visualização das posições na carteira
-    st.dataframe(carteira.drop(columns="Verificado"), use_container_width=True)
+    editar = st.toggle(label="Editar tabela",help="Cuidado! Alterar dados da tabela pode causar problemas sérios no app!")
 
+    if editar == True:
+        # Visualização das posições na carteira
+        carteira_editada = st.data_editor(carteira.drop(columns="Verificado"), use_container_width=True) # cria um dataframe editável na página
+        # atualiza 2_carteira.csv com os valores inseridos pelo usuário 
+        carteira[["Data","Categoria","País","Setor","Ativo","Operação","Quantidade","Preço"]
+             ] = carteira_editada[["Data","Categoria","País","Setor","Ativo","Operação","Quantidade","Preço"]]
+
+        #carteira["Data"] = pd.to_datetime(carteira["Data"])
+        carteira = carteira.reset_index()
+        carteira = carteira.reindex(columns=ordem)
+        carteira.to_csv("2_carteira.csv", index=False)
+    if editar == False:
+        st.dataframe(carteira.drop(columns="Verificado"), use_container_width=True) # cria um dataframe editável na página
 
 
     # Evolução patrimonial
@@ -312,7 +324,7 @@ if pagina == "Carteira":
         # adiciona o i-ésimo ativo no arquivo 3_patrimonio.csv, caso o aporte não esteja verificado, ou caso o arquivo esteja vazio. 
         if patrimonio.empty or (
             carteira.loc[i, "Verificado"] == False 
-            and carteira.loc[i, "Ativo"] not in patrimonio["Ativo"].unique()
+            and  carteira.loc[i, "Ativo"] not in patrimonio["Ativo"].unique()
         ):
             # adiciona as informações sobre o i-ésimo aporte no arquivo 3_patrimonio.csv
             patrimonio.loc[len(patrimonio)] = [ 
@@ -1073,4 +1085,3 @@ if pagina == 'Resultados':
     
     # Ajustar o layout para evitar sobreposição
     plt.tight_layout()
-
