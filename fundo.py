@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 import requests 
+import matplotlib.dates as mdates
+
 
 
 
@@ -957,12 +959,13 @@ def plotar_fronteira_eficiente(resultados, risco_otimo, retorno_otimo, pesos_oti
 def plotar_comparacao_carteira_ibov(carteira):
     # Data de início e fim para baixar dados
     data_fim = pd.Timestamp.now().date()
-    data_inicio = data_fim - pd.DateOffset(months=36)  # 36 meses atrás
+    data_inicio = (pd.Timestamp.now() - pd.DateOffset(months=36)).date()  # 36 meses atrás
 
-    # Lista para armazenar os dados de retorno acumulado de cada ativo
-    retorno_acumulado_ativos = []
+    # Lista para armazenar os retornos diários dos ativos
+    retornos_diarios_ativos = []
+
     # Baixar dados históricos ajustados do Yahoo Finance para cada ativo na carteira
-    for index, row in carteira_com_pesos.iterrows():
+    for index, row in carteira.iterrows():
         ativo = row['Ativo']
         peso = row['Peso']
         try:
@@ -972,42 +975,45 @@ def plotar_comparacao_carteira_ibov(carteira):
             else:
                 # Preencher dados faltantes com interpolação linear
                 dados = dados.interpolate(method='linear')
-                
+
                 # Garantir que todos os dados tenham o mesmo índice de datas
-                datas_completas = pd.date_range(start=data_inicio, end=data_fim, freq='D')
+                datas_completas = pd.date_range(start=data_inicio, end=data_fim, freq='B')  # Usar dias úteis (business days)
                 dados = dados.reindex(datas_completas)
                 
                 # Preencher novamente dados faltantes após a reindexação
                 dados = dados.interpolate(method='linear')
-                
-                # Calcular o retorno acumulado do ativo
-                dados[f'Retorno_Acumulado_{ativo}'] = (1 + dados.pct_change()).cumprod()
-                
-                # Salvar o retorno acumulado do ativo na lista
-                retorno_acumulado_ativos.append(dados[f'Retorno_Acumulado_{ativo}'] * peso)
+
+                # Calcular o retorno diário do ativo
+                retornos_diarios = dados.pct_change().fillna(0)
+
+                # Ajustar pelo peso do ativo na carteira
+                retornos_diarios_pesados = retornos_diarios * peso
+
+                # Adicionar à lista de retornos diários dos ativos
+                retornos_diarios_ativos.append(retornos_diarios_pesados)
                 
         except Exception as e:
             st.error(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
 
-    # Calcular o retorno acumulado da carteira
-    if retorno_acumulado_ativos:
-        retorno_acumulado_carteira = pd.concat(retorno_acumulado_ativos, axis=1).sum(axis=1)
-        retorno_acumulado_carteira.dropna(inplace=True)
-        
+    # Calcular o retorno diário acumulado da carteira
+    if retornos_diarios_ativos:
+        retorno_diario_carteira = pd.concat(retornos_diarios_ativos, axis=1).sum(axis=1)
+        retorno_acumulado_carteira = (1 + retorno_diario_carteira).cumprod()
+
         # Obter dados históricos ajustados do IBOV
         try:
             dados_ibov = yf.download('^BVSP', start=data_inicio, end=data_fim)['Adj Close']
             dados_ibov = dados_ibov.interpolate(method='linear')
             dados_ibov = dados_ibov.reindex(retorno_acumulado_carteira.index)
             dados_ibov = dados_ibov.interpolate(method='linear')
-            retorno_acumulado_ibov = (1 + dados_ibov.pct_change()).cumprod()
+            retorno_acumulado_ibov = (1 + dados_ibov.pct_change().fillna(0)).cumprod()
         except Exception as e:
             st.error(f"Erro ao obter dados para o IBOV: {str(e)}")
             return
 
         # Plotar o gráfico de comparação
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(retorno_acumulado_carteira.index, retorno_acumulado_carteira,  color='steelblue', linewidth=2, label='Carteira')
+        ax.plot(retorno_acumulado_carteira.index, retorno_acumulado_carteira, color='steelblue', linewidth=2, label='Carteira')
         ax.plot(retorno_acumulado_ibov.index, retorno_acumulado_ibov, color='orange', linewidth=2, label='IBOV')
 
         # Estilo dos eixos e legendas
@@ -1015,9 +1021,15 @@ def plotar_comparacao_carteira_ibov(carteira):
         ax.set_ylabel('Retorno Acumulado', fontsize=12)
         ax.legend(loc='upper left', fontsize=12)
 
-        # Título do gráfico
-        plt.title('Comparação do Retorno Acumulado da Carteira e IBOV nos Últimos 36 Meses', fontsize=14)
+        # Formatando as datas no eixo x
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+        plt.xticks(rotation=45)
+
+        # Adicionar uma grade ao gráfico
         plt.grid(True)
+
+        # Título do gráfico
+        plt.title(f'Comparação do Retorno Acumulado da Carteira e IBOV\n({data_inicio} a {data_fim})', fontsize=14)
         plt.tight_layout()
         st.pyplot(fig)
     else:
