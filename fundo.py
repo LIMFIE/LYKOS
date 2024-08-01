@@ -727,7 +727,8 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     # Calcular a variância da carteira
     variancia_carteira = np.dot(pesos.T, np.dot(matriz_cov, pesos))
 
-    # Simular dados de variância ao longo dos últimos 60 meses (substitua com dados reais)
+    # Simular dados de variância ao longo dos últimos 36 meses
+    np.random.seed(42)  # Para garantir resultados reproduzíveis
     variancias = np.random.normal(variancia_carteira, 0.05 * variancia_carteira, size=36)
 
     # Criar o gráfico de variância usando Plotly
@@ -742,9 +743,10 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     ))
 
     # Adicionar linha de média móvel de 10 meses
+    media_movel = np.convolve(variancias, np.ones(10)/10, mode='valid')
     fig.add_trace(go.Scatter(
-        x=list(range(len(np.convolve(variancias, np.ones(10)/10, mode='valid')))),
-        y=np.convolve(variancias, np.ones(10)/10, mode='valid'),
+        x=list(range(len(media_movel))),
+        y=media_movel,
         mode='lines',
         name='Média Móvel de 10 Meses',
         line=dict(color='orange', dash='dash')
@@ -765,16 +767,19 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
         xaxis_title='Meses',
         yaxis_title='Variância',
         legend_title='Legenda',
-        template='plotly_white'
+        template='plotly_white',
+        xaxis=dict(showline=False, showgrid=False),
+        yaxis=dict(showline=False, showgrid=False)
     )
 
     # Exibir o valor da variância na tela
-    st.write(f"A variância da carteira é: {variancia_carteira}")
+    st.write(f"A variância da carteira é: {variancia_carteira:.2f}")
 
     # Exibir o gráfico na aplicação Streamlit
     st.plotly_chart(fig)
 
     return variancia_carteira
+
 
 def plotar_termometro_de_risco(nivel_risco):
     fig = go.Figure(go.Indicator(
@@ -831,6 +836,7 @@ def plotar_termometro_de_risco(nivel_risco):
 
     # Exibir o gráfico no Streamlit
     st.plotly_chart(fig)
+
 
 
 def calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05):
@@ -1155,4 +1161,5 @@ if pagina == 'Resultados':
 
         # Plotar o termômetro de risco
         plotar_termometro_de_risco(nivel_risco)
+
 
