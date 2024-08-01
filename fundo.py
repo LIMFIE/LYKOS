@@ -1150,7 +1150,7 @@ if pagina == 'Resultados':
     plotar_comparacao_carteira_ibov(carteira)
 
      # Chamar a função para calcular e plotar a variância da carteira
-     variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
+    variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
 
     # if variancia_carteira is not None:
     #     # Converter a variância da carteira para um nível de risco de 1 a 5
