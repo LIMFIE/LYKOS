@@ -568,6 +568,7 @@ if pagina == "Posição":
     st.plotly_chart(fig_evolucao, use_container_width=True)
 
 
+
 def calcular_plotar_drawdown_carteira(carteira_com_pesos):
     # Data de início e fim para baixar dados
     data_fim = pd.Timestamp.now().date()
@@ -714,7 +715,6 @@ def plotar_matriz_covariancia(matriz_cov):
     sns.heatmap(matriz_cov, annot=True, ax=ax)
     st.pyplot(fig)
 
-# Função para calcular e plotar a variância da carteira ao longo dos últimos 60 meses usando Plotly
 def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     # Extrair os pesos do DataFrame para um array numpy
     pesos = carteira_com_pesos['Peso'].values
@@ -836,8 +836,6 @@ def plotar_termometro_de_risco(nivel_risco):
 
     # Exibir o gráfico no Streamlit
     st.plotly_chart(fig)
-
-
 
 def calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05):
     # Calcular retornos ponderados
@@ -1018,6 +1016,7 @@ def plotar_fronteira_eficiente(resultados, risco_otimo, retorno_otimo, pesos_oti
 
     st.pyplot(fig)
 
+
 def plotar_comparacao_carteira_ibov(carteira):
     # Data de início e fim para baixar dados
     data_fim = pd.Timestamp.now().date()
@@ -1161,5 +1160,4 @@ if pagina == 'Resultados':
 
         # Plotar o termômetro de risco
         plotar_termometro_de_risco(nivel_risco)
-
 
