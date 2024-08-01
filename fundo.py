@@ -781,61 +781,61 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     return variancia_carteira
 
 
-def plotar_termometro_de_risco(nivel_risco):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
-        value=nivel_risco,
-        title={'text': "Nível de Risco da Carteira", 'font': {'size': 18, 'color': 'white'}},
-        gauge={
-            'axis': {'range': [0, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ['Baixo', 'Moderado', 'Neutro', 'Alto', 'Muito Alto'], 'tickcolor': 'white'},
-            'bar': {'color': "black"},  # Barra interna preta
-            'steps': [
-                {'range': [0, 1], 'color': "lightblue"},
-                {'range': [1, 2], 'color': "lightgreen"},
-                {'range': [2, 3], 'color': "yellow"},
-                {'range': [3, 4], 'color': "orange"},
-                {'range': [4, 5], 'color': "red"}
-            ],
-            'threshold': {
-                'line': {'color': "white", 'width': 4},
-                'thickness': 0.75,
-                'value': nivel_risco
-            }
-        }
-    ))
+# #def plotar_termometro_de_risco(nivel_risco):
+#     #fig = go.Figure(go.Indicator(
+#         mode="gauge+number+delta",
+#         value=nivel_risco,
+#         title={'text': "Nível de Risco da Carteira", 'font': {'size': 18, 'color': 'white'}},
+#         gauge={
+#             'axis': {'range': [0, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ['Baixo', 'Moderado', 'Neutro', 'Alto', 'Muito Alto'], 'tickcolor': 'white'},
+#             'bar': {'color': "black"},  # Barra interna preta
+#             'steps': [
+#                 {'range': [0, 1], 'color': "lightblue"},
+#                 {'range': [1, 2], 'color': "lightgreen"},
+#                 {'range': [2, 3], 'color': "yellow"},
+#                 {'range': [3, 4], 'color': "orange"},
+#                 {'range': [4, 5], 'color': "red"}
+#             ],
+#             'threshold': {
+#                 'line': {'color': "white", 'width': 4},
+#                 'thickness': 0.75,
+#                 'value': nivel_risco
+#             }
+#         }
+#     ))
 
-    fig.update_layout(
-        height=400,
-        margin=dict(l=20, r=20, t=50, b=20),
-        template='plotly_dark',  # Template escuro
-        font=dict(size=14, color="white"),
-        plot_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
-        paper_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
-        xaxis_visible=False,
-        yaxis_visible=False,
-        showlegend=False
-    )
+#     fig.update_layout(
+#         height=400,
+#         margin=dict(l=20, r=20, t=50, b=20),
+#         template='plotly_dark',  # Template escuro
+#         font=dict(size=14, color="white"),
+#         plot_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
+#         paper_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
+#         xaxis_visible=False,
+#         yaxis_visible=False,
+#         showlegend=False
+#     )
 
-    # Adicionar linha de referência para um nível ideal (opcional)
-    nivel_ideal = 3  # Exemplo de nível ideal
-    fig.add_trace(go.Scatter(
-        x=[0.5], y=[nivel_ideal],
-        mode='markers',
-        marker=dict(color='cyan', size=15, symbol='star'),
-        name='Nível Ideal'
-    ))
+#     # Adicionar linha de referência para um nível ideal (opcional)
+#     nivel_ideal = 3  # Exemplo de nível ideal
+#     fig.add_trace(go.Scatter(
+#         x=[0.5], y=[nivel_ideal],
+#         mode='markers',
+#         marker=dict(color='cyan', size=15, symbol='star'),
+#         name='Nível Ideal'
+#     ))
 
-    # Adicionar anotação para indicar o nível de risco
-    fig.add_annotation(
-        x=0.5, y=0.2,
-        text=f"Nível de Risco: {nivel_risco}",
-        showarrow=False,
-        font=dict(size=16, color="white"),
-        align='center'
-    )
+#     # Adicionar anotação para indicar o nível de risco
+#     fig.add_annotation(
+#         x=0.5, y=0.2,
+#         text=f"Nível de Risco: {nivel_risco}",
+#         showarrow=False,
+#         font=dict(size=16, color="white"),
+#         align='center'
+#     )
 
-    # Exibir o gráfico no Streamlit
-    st.plotly_chart(fig)
+#     # Exibir o gráfico no Streamlit
+#     st.plotly_chart(fig)
 
 def calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05):
     # Calcular retornos ponderados
@@ -1149,15 +1149,15 @@ if pagina == 'Resultados':
 
     plotar_comparacao_carteira_ibov(carteira)
 
-    # Chamar a função para calcular e plotar a variância da carteira
-    variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
+    # # Chamar a função para calcular e plotar a variância da carteira
+    # variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
 
-    if variancia_carteira is not None:
-        # Converter a variância da carteira para um nível de risco de 1 a 5
-        max_variancia = 0.15  # Variância máxima esperada (ajuste conforme necessário)
-        nivel_risco = (variancia_carteira / max_variancia) * 5
-        nivel_risco = min(max(nivel_risco, 1), 5)  # Garantir que o nível de risco esteja na faixa de 1 a 5
+    # if variancia_carteira is not None:
+    #     # Converter a variância da carteira para um nível de risco de 1 a 5
+    #     max_variancia = 0.15  # Variância máxima esperada (ajuste conforme necessário)
+    #     nivel_risco = (variancia_carteira / max_variancia) * 5
+    #     nivel_risco = min(max(nivel_risco, 1), 5)  # Garantir que o nível de risco esteja na faixa de 1 a 5
 
-        # Plotar o termômetro de risco
-        plotar_termometro_de_risco(nivel_risco)
+    #     # Plotar o termômetro de risco
+    #     plotar_termometro_de_risco(nivel_risco)
 
