@@ -715,7 +715,7 @@ def plotar_matriz_covariancia(matriz_cov):
     st.pyplot(fig)
 
 # Função para calcular e plotar a variância da carteira ao longo dos últimos 60 meses usando Plotly
-def calcular_e_plotar_variancia(carteira, matriz_cov):
+def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     # Extrair os pesos do DataFrame para um array numpy
     pesos = carteira_com_pesos['Peso'].values
 
@@ -1145,7 +1145,7 @@ if pagina == 'Resultados':
     plotar_comparacao_carteira_ibov(carteira)
 
     # Chamar a função para calcular e plotar a variância da carteira
-    variancia_carteira = calcular_e_plotar_variancia(carteira, matriz_cov)
+    variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
 
     if variancia_carteira is not None:
         # Converter a variância da carteira para um nível de risco de 1 a 5
