@@ -1149,7 +1149,7 @@ if pagina == 'Resultados':
 
     if variancia_carteira is not None:
         # Converter a variância da carteira para um nível de risco de 1 a 5
-        max_variancia = 0.10  # Variância máxima esperada (ajuste conforme necessário)
+        max_variancia = 0.15  # Variância máxima esperada (ajuste conforme necessário)
         nivel_risco = (variancia_carteira / max_variancia) * 5
         nivel_risco = min(max(nivel_risco, 1), 5)  # Garantir que o nível de risco esteja na faixa de 1 a 5
 
