@@ -1152,6 +1152,10 @@ if pagina == 'Resultados':
      # Chamar a função para calcular e plotar a variância da carteira
     variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
 
+    # Supondo que você já tenha df_retornos e carteira_com_pesos definidos
+    var_parametrico = calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05)
+
+
     # if variancia_carteira is not None:
     #     # Converter a variância da carteira para um nível de risco de 1 a 5
     #     max_variancia = 0.15  # Variância máxima esperada (ajuste conforme necessário)
