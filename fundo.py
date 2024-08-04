@@ -1074,7 +1074,7 @@ def plotar_comparacao_carteira_ibov(carteira):
 
         # Plotar o gráfico de comparação
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(retorno_acumulado_carteira.index, retorno_acumulado_carteira, color='steelblue', linewidth=2, label='Carteira')
+        ax.plot(retorno_acumulado_carteira.index, retorno_acumulado_carteira, color='steelblue', linewidth=2, label='LYKOS')
         ax.plot(retorno_acumulado_ibov.index, retorno_acumulado_ibov, color='orange', linewidth=2, label='IBOV')
 
         # Estilo dos eixos e legendas
