@@ -566,6 +566,35 @@ if pagina == "Posição":
     )
 
     st.plotly_chart(fig_evolucao, use_container_width=True)
+    # Verifica se não há dados faltantes
+    patrimonio_final.dropna(subset=['Carteira', 'Ibovespa'], inplace=True)
+
+    # Calcula o retorno acumulado
+    patrimonio_final['Carteira Retorno Acumulado'] = (patrimonio_final['Carteira'] / patrimonio_final['Carteira'].iloc[0]) - 1
+    patrimonio_final['Ibovespa Retorno Acumulado'] = (patrimonio_final['Ibovespa'] / patrimonio_final['Ibovespa'].iloc[0]) - 1
+
+
+    # Criar o gráfico de retornos acumulados
+    fig_retorno_acumulado = px.line(
+        patrimonio_final,
+        x="Data",
+        y=["Carteira Retorno Acumulado", "Ibovespa Retorno Acumulado"],
+        title="Retornos Acumulados da Carteira vs. IBOV",
+        labels={"value": "Retorno Acumulado", "variable": "Índice"}
+    )
+
+    fig_retorno_acumulado.update_layout(
+        title_font_size=35,
+        title_text="Retornos Acumulados da Carteira vs. IBOV",
+        title_automargin=True,
+        title_yref="paper",
+        xaxis_title="Data",
+        yaxis_title="Retorno Acumulado"
+    )
+
+    # Mostrar o gráfico
+    st.plotly_chart(fig_retorno_acumulado, use_container_width=True)
+
 
 
 
