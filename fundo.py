@@ -492,7 +492,8 @@ for i in range(len(carteira)): # realiza o loop a seguir para cada aporte regist
 if pagina == "Posição":
     col9, col10 = st.columns(2)
 
-    data_divisao = patrimonio.sort_values("Data", ascending=True)["Data"].iloc[-1]
+    # Obtém a data mais recente no DataFrame de patrimônio
+    data_divisao = patrimonio["Data"].max()
 
     with col9:
         divisao_pais = (
@@ -502,8 +503,7 @@ if pagina == "Posição":
             .loc[data_divisao]
             .reset_index()
         )
-
-        fig_pais = px.pie(divisao_pais, "País", "Patrimônio")
+        fig_pais = px.pie(divisao_pais, names="País", values="Patrimônio")
         st.plotly_chart(fig_pais, use_container_width=True)
 
     with col10:
@@ -514,57 +514,57 @@ if pagina == "Posição":
             .loc[data_divisao]
             .reset_index()
         )
-
-        fig_setor = px.pie(divisao_setor, "Setor", "Patrimônio")
+        fig_setor = px.pie(divisao_setor, names="Setor", values="Patrimônio")
         st.plotly_chart(fig_setor, use_container_width=True)
 
+    # Calcula a evolução patrimonial
     carteira = carteira.set_index("Data")
-    quantidades = (carteira["Quantidade"] * carteira["Preço"]).groupby("Data").sum() # acha o valor do patrimônio para cada data em 2_carteira.csv
-    data_inicio = quantidades.index[0] # define a data de ínicio de extração de dados como a primeira data em 2_carteira.csv
-    data_atual = datetime.now()
-    dados_ibov = yf.download("^BVSP",data_inicio,data_atual)["Adj Close"] # extrai os dados do Ibovespa para cáclulo do patrimônio
-    # substitui os valores de patrimônio em "quantidades" por multiplos do ibovespa do mesmo valor
-    for data in quantidades.index:
-        quantidades[data] = quantidades[data] / dados_ibov[data] # por exemplo: se uma "cota" do IBOV vale 1000 e temos 1.000.000 de patrimônio, temos 1000 cotas do ibov de patrimônio 
+    quantidades = (carteira["Quantidade"] * carteira["Preço"]).groupby("Data").sum()
+    data_inicio = quantidades.index[0]
+    data_atual = datetime.now().strftime('%Y-%m-%d')
 
-    quantidades = quantidades.cumsum() # ajusta os valores para refletir a evolução da quantidade de IBOV
-    numero_iteracoes = len(quantidades) - 1
-    patrimonio_total = pd.Series()
-    # calcula a evolução do patrimonio se ele fosse investido ibovespa
-    # primeiramente calculamos a evolução para as datas em carteira  
-    for i in range(numero_iteracoes):
-        data_inicial = quantidades.index[i] # data da vez
-        data_final = quantidades.index[i+1] # data seguinte
-    
-        dados_periodo = dados_ibov[data_inicial : data_final] # dados de preço do ibovespa entre as datas de carteira
-        patrimonio_periodo = dados_periodo * quantidades[data_inicial] # calcula a evolução do patrimonio desde a data da vez até a seguinte
-        if len(patrimonio_total.index) == 0:  
-           patrimonio_total = patrimonio_periodo    
-        else:    
-         patrimonio_total = pd.concat([patrimonio_total,patrimonio_periodo])
-    
+    # Baixa os dados do IBOV
+    dados_ibov = yf.download("^BVSP", start=data_inicio, end=data_atual)["Adj Close"]
 
-    # repete o processo anterior usando a ultima data de 2_carteira.csv e a data atual
-    data_final = quantidades.index[-1]
-    dados_periodo = dados_ibov[data_final:data_atual] 
-    patrimonio_periodo = dados_periodo * quantidades[data_final]
+    # Ajusta o valor do patrimônio em termos de IBOV
+    quantidades_ibov = quantidades / dados_ibov.loc[quantidades.index]
 
-    patrimonio_total = pd.concat([patrimonio_total,patrimonio_periodo]).reset_index()
-    patrimonio_total = patrimonio_total.groupby("index").last() # retira linhas com indices repetidos 
+    # Calcula a evolução do patrimônio ao longo do tempo
+    patrimonio_total = pd.Series(dtype='float64')
 
+    for i in range(len(quantidades_ibov) - 1):
+        data_inicial = quantidades_ibov.index[i]
+        data_final = quantidades_ibov.index[i + 1]
+        dados_periodo = dados_ibov.loc[data_inicial:data_final]
+        patrimonio_periodo = dados_periodo * quantidades_ibov[data_inicial]
+        patrimonio_total = pd.concat([patrimonio_total, patrimonio_periodo])
 
-    # Soma o patrimônio em cada data, retornando uma série temporal com o valor do patrimônio em cada data
-    patrimonio = patrimonio.groupby("Data").sum().reset_index(drop=True)
-    patrimonio_total.reset_index(inplace=True)
-    
-    patrimonio_final = pd.concat([patrimonio_total,patrimonio],axis=1)   
+    # Adiciona o período final até a data atual
+    data_final = quantidades_ibov.index[-1]
+    dados_periodo = dados_ibov.loc[data_final:data_atual]
+    patrimonio_periodo = dados_periodo * quantidades_ibov[data_final]
+    patrimonio_total = pd.concat([patrimonio_total, patrimonio_periodo]).reset_index()
+
+    # Agrupa e remove valores duplicados
+    patrimonio_total = patrimonio_total.groupby("Date").last()
+
+    # Calcula o patrimônio da carteira
+    patrimonio_agrupado = patrimonio.groupby("Data").sum().reset_index()
+    patrimonio_final = pd.merge(patrimonio_total, patrimonio_agrupado, left_on="Date", right_on="Data")
     patrimonio_final.dropna(inplace=True)
-    patrimonio_final.rename(columns={"index":"Data", 0:"Ibovespa", "Patrimônio":"Carteira"},inplace=True)
-    # faz e desenha o gráfico de evolução do patrimônio
-    fig_evolucao = px.line(patrimonio_final, x="Data", y=["Carteira","Ibovespa"])
-    fig_evolucao.update_layout(title_font_size=35,title_text="Evolução Patrimonial",title_automargin=True,title_yref="paper",xaxis_title="Data",yaxis_title="Patrimônio (R$)")
-    
-    #ibov_evolucao = px.line(patrimonio_total, "Date", "Adj Close")
+    patrimonio_final.rename(columns={"Date": "Data", 0: "Ibovespa", "Patrimônio": "Carteira"}, inplace=True)
+
+    # Cria e desenha o gráfico de evolução patrimonial
+    fig_evolucao = px.line(patrimonio_final, x="Data", y=["Carteira", "Ibovespa"])
+    fig_evolucao.update_layout(
+        title_font_size=35,
+        title_text="Evolução Patrimonial",
+        title_automargin=True,
+        title_yref="paper",
+        xaxis_title="Data",
+        yaxis_title="Patrimônio (R$)"
+    )
+
     st.plotly_chart(fig_evolucao, use_container_width=True)
 
 
