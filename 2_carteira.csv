@@ -1,0 +1,11 @@
+Data,Categoria,País,Setor,Ativo,Operação,Quantidade,Preço,Verificado
+2024-07-09,Equity,Brasil,Matéria Prima,GOAU4.SA,Long,4748,10.53,True
+2024-07-09,Equity,Brasil,Indústria,VLID3.SA,Long,3215,15.55,True
+2024-07-09,Equity,Brasil,Energia,PETR4.SA,Long,1301,38.44,True
+2024-07-09,Equity,Brasil,Imobiliário,PLPL3.SA,Long,4975,10.05,True
+2024-07-09,Equity,Brasil,Comunicação,CASH3.SA,Long,8039,6.22,True
+2024-07-09,Equity,Brasil,Imobiliário,HBRE3.SA,Long,9208,5.43,True
+2024-07-09,Equity,Brasil,Consumo Cíclico,LREN3.SA,Long,3817,13.1,True
+2024-07-09,Equity,Brasil,Matéria Prima,VALE3.SA,Long,792,63.1,True
+2024-07-09,Equity,Brasil,Outros,CSED3.SA,Long,12165,4.11,True
+2024-07-09,Equity,Brasil,Utilidades,SAPR3.SA,Long,9747,5.13,True
