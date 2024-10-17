@@ -609,7 +609,17 @@ if pagina == "Posição":
 
     # Mostrar o gráfico
     st.plotly_chart(fig_retorno_acumulado, use_container_width=True)
-    st.dataframe(patrimonio_total)
+    
+    # Multiplicar as colunas Carteira e Ibovespa por 100 para convertê-las em porcentagem
+    patrimonio_final['Carteira'] = patrimonio_final['Carteira'] * 100
+    patrimonio_final['Ibovespa'] = patrimonio_final['Ibovespa'] * 100
+
+    # Selecione apenas as colunas desejadas
+    colunas_desejadas = ['Data', 'Evolução Patrimonial Carteira', 'Evolução Patrimonial Ibovespa', 'Carteira', 'Ibovespa']
+    patrimonio_final_filtrado = patrimonio_final[colunas_desejadas]
+
+    # Exibe o DataFrame filtrado no Streamlit
+    st.dataframe(patrimonio_final_filtrado)
     
 
 
