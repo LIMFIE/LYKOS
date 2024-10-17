@@ -488,6 +488,8 @@ for i in range(len(carteira)): # realiza o loop a seguir para cada aporte regist
             carteira.to_csv("2_carteira.csv", index=False)
             patrimonio = patrimonio.sort_values(["Ativo", "Data"])
             patrimonio.to_csv("3_patrimonio.csv", index=False)
+    
+
 
 if pagina == "Posição":
     col9, col10 = st.columns(2)
@@ -607,6 +609,8 @@ if pagina == "Posição":
 
     # Mostrar o gráfico
     st.plotly_chart(fig_retorno_acumulado, use_container_width=True)
+    st.dataframe(patrimonio_total)
+    
 
 
 
@@ -664,7 +668,7 @@ def calcular_plotar_drawdown_carteira(carteira_com_pesos):
         data_drawdown_minimo = drawdown_carteira.idxmax()
         
         # Plotar o gráfico de drawdown da carteira com anotações
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(16, 5))
         ax.plot(drawdown_carteira.index, drawdown_carteira * 100, linestyle='-', color='steelblue', linewidth=2, label='Drawdown da Carteira (5 Dias)')
         
         # Destacar o ponto de máximo drawdown
@@ -746,16 +750,19 @@ def calcular_correlacao_covariancia(carteira):
 # Função para plotar a matriz de correlação
 def plotar_matriz_correlacao(matriz_corr):
     st.header('Matriz de Correlação')
-    fig, ax = plt.subplots(figsize=(14, 10))  # Ajuste o tamanho da figura aqui
-    sns.heatmap(matriz_corr, annot=True, ax=ax)
+    fig, ax = plt.subplots(figsize=(25,15))  # Ajuste o tamanho da figura aqui
+    sns.heatmap(matriz_corr, annot=True, ax=ax, fmt='.2f', cmap='coolwarm')  # Pode ajustar o tamanho da fonte aqui se necessário
+    plt.tight_layout()  # Ajuste o layout para respeitar o tamanho da figura
     st.pyplot(fig)
 
 # Função para plotar a matriz de covariância
 def plotar_matriz_covariancia(matriz_cov):
     st.header('Matriz de Covariância')
-    fig, ax = plt.subplots(figsize=(14, 10))  # Ajuste o tamanho da figura aqui
-    sns.heatmap(matriz_cov, annot=True, ax=ax)
+    fig, ax = plt.subplots(figsize=(25,15))  # Ajuste o tamanho da figura aqui
+    sns.heatmap(matriz_cov, annot=True, ax=ax, fmt='.2f', cmap='coolwarm')  # Pode ajustar o tamanho da fonte aqui se necessário
+    plt.tight_layout()  # Ajuste o layout para respeitar o tamanho da figura
     st.pyplot(fig)
+
 
 def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
     # Extrair os pesos do DataFrame para um array numpy
@@ -1174,19 +1181,18 @@ if pagina == 'Resultados':
     # Plotar fronteira eficiente com a carteira ótima
     plotar_fronteira_eficiente(resultados_simulacao, risco_otimo, retorno_otimo, pesos_otimos, matriz_covariancia, media_retornos)
 
-    # Plotar e exibir a matriz de correlação
     st.subheader('Matriz de Correlação')
-    fig_corr, ax_corr = plt.subplots()
+    fig_corr, ax_corr = plt.subplots(figsize=(25, 15))  # Ajuste o tamanho da figura
     sns.heatmap(matriz_corr, annot=True, ax=ax_corr, cmap='coolwarm', cbar=True, square=True, linewidths=.5)
-    ax_corr.set_title('Matriz de Correlação')
+    ax_corr.set_title('Matriz de Correlação', fontsize=16)  # Ajuste o tamanho da fonte do título
     st.pyplot(fig_corr)
 
     # Plotar e exibir a matriz de covariância escalada
     st.subheader('Matriz de Covariância Escalada')
-    fig_cov, ax_cov = plt.subplots()
+    fig_cov, ax_cov = plt.subplots(figsize=(25, 15))  # Ajuste o tamanho da figura
     matriz_cov_escalada = matriz_cov * 1e5  # Multiplica cada valor por 100,000
     sns.heatmap(matriz_cov_escalada, annot=True, ax=ax_cov, cmap='coolwarm', cbar=True, square=True, linewidths=.5)
-    ax_cov.set_title('Matriz de Covariância Escalada')
+    ax_cov.set_title('Matriz de Covariância Escalada', fontsize=16)  # Ajuste o tamanho da fonte do título
     st.pyplot(fig_cov)
 
     plotar_comparacao_carteira_ibov(carteira)
