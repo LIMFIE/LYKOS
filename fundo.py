@@ -609,7 +609,8 @@ if pagina == "Posição":
 
     # Mostrar o gráfico
     st.plotly_chart(fig_retorno_acumulado, use_container_width=True)
-    
+
+    st.title('Evoluções Quantitativas')
     # Multiplicar as colunas Carteira e Ibovespa por 100 para convertê-las em porcentagem
     patrimonio_final['Carteira'] = patrimonio_final['Carteira'] * 100
     patrimonio_final['Ibovespa'] = patrimonio_final['Ibovespa'] * 100
