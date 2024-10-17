@@ -609,11 +609,17 @@ if pagina == "Posição":
 
     # Mostrar o gráfico
     st.plotly_chart(fig_retorno_acumulado, use_container_width=True)
-
+    
+    # Exibir o Dataframe da Evolução Patrimonial 
+    # st.dataframe(patrimonio_final)
     st.title('Evoluções Quantitativas')
     # Multiplicar as colunas Carteira e Ibovespa por 100 para convertê-las em porcentagem
     patrimonio_final['Carteira'] = patrimonio_final['Carteira'] * 100
     patrimonio_final['Ibovespa'] = patrimonio_final['Ibovespa'] * 100
+
+    # Opcional: Formatar como string com o símbolo de porcentagem
+    # patrimonio_final['Carteira'] = patrimonio_final['Carteira'].apply(lambda x: f"{x:.2f}%")
+    # patrimonio_final['Ibovespa'] = patrimonio_final['Ibovespa'].apply(lambda x: f"{x:.2f}%")
 
     # Selecione apenas as colunas desejadas
     colunas_desejadas = ['Data', 'Evolução Patrimonial Carteira', 'Evolução Patrimonial Ibovespa', 'Carteira', 'Ibovespa']
@@ -621,7 +627,11 @@ if pagina == "Posição":
 
     # Exibe o DataFrame filtrado no Streamlit
     st.dataframe(patrimonio_final_filtrado)
-    
+
+
+
+
+   
 
 
 
@@ -840,62 +850,101 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
 
     return variancia_carteira
 
+import plotly.graph_objects as go
+import streamlit as st
 
-# #def plotar_termometro_de_risco(nivel_risco):
-#     #fig = go.Figure(go.Indicator(
-#         mode="gauge+number+delta",
-#         value=nivel_risco,
-#         title={'text': "Nível de Risco da Carteira", 'font': {'size': 18, 'color': 'white'}},
-#         gauge={
-#             'axis': {'range': [0, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ['Baixo', 'Moderado', 'Neutro', 'Alto', 'Muito Alto'], 'tickcolor': 'white'},
-#             'bar': {'color': "black"},  # Barra interna preta
-#             'steps': [
-#                 {'range': [0, 1], 'color': "lightblue"},
-#                 {'range': [1, 2], 'color': "lightgreen"},
-#                 {'range': [2, 3], 'color': "yellow"},
-#                 {'range': [3, 4], 'color': "orange"},
-#                 {'range': [4, 5], 'color': "red"}
-#             ],
-#             'threshold': {
-#                 'line': {'color': "white", 'width': 4},
-#                 'thickness': 0.75,
-#                 'value': nivel_risco
-#             }
-#         }
-#     ))
+# Função para plotar o termômetro de risco
+def plotar_termometro_de_risco(nivel_risco):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=nivel_risco,
+        title={'text': "Nível de Risco da Carteira", 'font': {'size': 18, 'color': 'white'}},
+        gauge={
+            'axis': {'range': [0, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ['Baixo', 'Moderado', 'Neutro', 'Alto', 'Muito Alto'], 'tickcolor': 'white'},
+            'bar': {'color': "black"},  # Barra interna preta
+            'steps': [
+                {'range': [0, 1], 'color': "lightblue"},
+                {'range': [1, 2], 'color': "lightgreen"},
+                {'range': [2, 3], 'color': "yellow"},
+                {'range': [3, 4], 'color': "orange"},
+                {'range': [4, 5], 'color': "red"}
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': nivel_risco
+            }
+        }
+    ))
 
-#     fig.update_layout(
-#         height=400,
-#         margin=dict(l=20, r=20, t=50, b=20),
-#         template='plotly_dark',  # Template escuro
-#         font=dict(size=14, color="white"),
-#         plot_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
-#         paper_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
-#         xaxis_visible=False,
-#         yaxis_visible=False,
-#         showlegend=False
-#     )
+    fig.update_layout(
+        height=400,
+        margin=dict(l=20, r=20, t=50, b=20),
+        template='plotly_dark',  # Template escuro
+        font=dict(size=14, color="white"),
+        plot_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
+        paper_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
+    )
 
-#     # Adicionar linha de referência para um nível ideal (opcional)
-#     nivel_ideal = 3  # Exemplo de nível ideal
-#     fig.add_trace(go.Scatter(
-#         x=[0.5], y=[nivel_ideal],
-#         mode='markers',
-#         marker=dict(color='cyan', size=15, symbol='star'),
-#         name='Nível Ideal'
-#     ))
+    # Exibir o gráfico no Streamlit
+    st.plotly_chart(fig)
 
-#     # Adicionar anotação para indicar o nível de risco
-#     fig.add_annotation(
-#         x=0.5, y=0.2,
-#         text=f"Nível de Risco: {nivel_risco}",
-#         showarrow=False,
-#         font=dict(size=16, color="white"),
-#         align='center'
-#     )
+# Função para calcular o nível de risco com base na volatilidade
+def calcular_nivel_risco_volatilidade(retornos_diarios):
+    volatilidade = retornos_diarios.std()  # Calcula o desvio padrão dos retornos diários
+    
+    # Classificar o nível de risco baseado em faixas de volatilidade
+    if volatilidade < 0.01:  # Menor que 1%
+        return 1  # Baixo risco
+    elif volatilidade < 0.02:  # Entre 1% e 2%
+        return 2  # Moderado
+    elif volatilidade < 0.03:  # Entre 2% e 3%
+        return 3  # Neutro
+    elif volatilidade < 0.04:  # Entre 3% e 4%
+        return 4  # Alto
+    else:  # Maior que 4%
+        return 5  # Muito Alto
 
-#     # Exibir o gráfico no Streamlit
-#     st.plotly_chart(fig)
+# Função para calcular o retorno diário e aplicar o termômetro de risco
+def calcular_plotar_risco_com_volatilidade(carteira_com_pesos):
+    data_fim = pd.Timestamp.now().date()
+    data_inicio = data_fim - pd.DateOffset(months=36)  # Últimos 36 meses
+    
+    retorno_diario_carteira = []
+    
+    for index, row in carteira_com_pesos.iterrows():
+        ativo = row['Ativo']
+        peso = row['Peso']
+        try:
+            # Baixar os dados de preço ajustado
+            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            if dados.empty:
+                st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker.")
+            else:
+                # Preencher valores faltantes
+                dados = dados.interpolate(method='linear')
+                
+                # Calcular o retorno diário do ativo
+                retorno_diario_ativo = dados.pct_change().dropna()
+                
+                # Ponderar os retornos diários pelo peso na carteira
+                retorno_diario_carteira.append(retorno_diario_ativo * peso)
+        
+        except Exception as e:
+            st.error(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
+    
+    if retorno_diario_carteira:
+        # Combinar todos os retornos ponderados dos ativos
+        retorno_diario_carteira = pd.concat(retorno_diario_carteira, axis=1).sum(axis=1).dropna()
+        
+        # Calcular o nível de risco com base na volatilidade (desvio padrão)
+        nivel_risco = calcular_nivel_risco_volatilidade(retorno_diario_carteira)
+        
+        # Plotar o termômetro de risco
+        plotar_termometro_de_risco(nivel_risco)
+        
+    else:
+        st.warning("Não foi possível calcular o nível de risco devido a problemas com os dados dos ativos.")
 
 def calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05):
     # Calcular retornos ponderados
@@ -1156,7 +1205,6 @@ def plotar_comparacao_carteira_ibov(carteira):
     else:
         st.warning("Não foi possível calcular o retorno acumulado da carteira devido a problemas com os dados dos ativos.")
 
-
 # Exemplo de uso na página 'Resultados'
 if pagina == 'Resultados':
     # Supondo que você já tenha calculado df_retornos e carteira_com_pesos
@@ -1212,14 +1260,10 @@ if pagina == 'Resultados':
     variancia_carteira = calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov)
 
     # Supondo que você já tenha df_retornos e carteira_com_pesos definidos
-    var_parametrico = calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05)
+    var_parametrico = calcular_e_plotar_var_parametrico(df_retornos, carteira_com_pesos, alpha=0.05)    
 
+        # Chamando a função na aba de resultados do Streamlit
+    st.header("Termômetro de Risco")
+    calcular_plotar_risco_com_volatilidade(carteira_com_pesos)
 
-    # if variancia_carteira is not None:
-    #     # Converter a variância da carteira para um nível de risco de 1 a 5
-    #     max_variancia = 0.15  # Variância máxima esperada (ajuste conforme necessário)
-    #     nivel_risco = (variancia_carteira / max_variancia) * 5
-    #     nivel_risco = min(max(nivel_risco, 1), 5)  # Garantir que o nível de risco esteja na faixa de 1 a 5
-
-    #     # Plotar o termômetro de risco
-    #     plotar_termometro_de_risco(nivel_risco)
+    
