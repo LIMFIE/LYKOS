@@ -735,27 +735,33 @@ def calcular_pesos_por_valor(carteira):
     return carteira
 
 
-
-
 # Função para calcular correlação e covariância sem o IBOV
 def calcular_correlacao_covariancia(carteira):
     df_retornos = pd.DataFrame()
 
     data_fim = pd.Timestamp.now().date()
-    data_inicio = data_fim - pd.DateOffset(months=36)  # Busca dados para os últimos 60 meses
+    data_inicio = data_fim - pd.DateOffset(months=36)  # Últimos 36 meses
+
+    # Calcular pesos dos ativos na carteira
+    carteira_com_pesos = calcular_pesos_por_valor(carteira)
+    
+    avisos = []  # Armazena avisos para exibir no final
 
     # Obter dados dos ativos da carteira
-    carteira_com_pesos = calcular_pesos_por_valor(carteira)
     for ativo in carteira_com_pesos['Ativo'].unique():
         try:
+            # Obtenção dos dados ajustados de fechamento
             ativo_data = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
             if ativo_data.empty:
-                st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker ou tente novamente mais tarde.")
+                avisos.append(f"Dados vazios para o ativo {ativo}. Verifique o ticker.")
             else:
-                df_retornos[f'{ativo}_retorno'] = ativo_data.pct_change()
+                # Calcular o retorno diário e adicionar ao DataFrame
+                df_retornos[f'{ativo}_retorno'] = ativo_data.pct_change().dropna()
+                
         except Exception as e:
-            st.error(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
+            avisos.append(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
 
+    # Remover linhas com valores ausentes
     df_retornos.dropna(inplace=True)
 
     if df_retornos.empty:
@@ -766,7 +772,13 @@ def calcular_correlacao_covariancia(carteira):
     matriz_corr = df_retornos.corr()
     matriz_cov = df_retornos.cov()
 
+    # Exibir os avisos, se houver
+    if avisos:
+        for aviso in avisos:
+            st.warning(aviso)
+
     return df_retornos, matriz_corr, matriz_cov, carteira_com_pesos
+
 
 # Função para plotar a matriz de correlação
 def plotar_matriz_correlacao(matriz_corr):
@@ -850,8 +862,31 @@ def calcular_e_plotar_variancia(carteira_com_pesos, matriz_cov):
 
     return variancia_carteira
 
-import plotly.graph_objects as go
+import numpy as np
+import pandas as pd
+import yfinance as yf
 import streamlit as st
+import plotly.graph_objects as go
+
+# Função para calcular volatilidade ponderada da carteira usando a matriz de covariância
+def calcular_volatilidade_carteira(carteira_com_pesos, matriz_cov):
+    pesos = np.array(carteira_com_pesos['Peso'])
+    volatilidade_carteira = np.sqrt(np.dot(pesos.T, np.dot(matriz_cov, pesos)))
+    return volatilidade_carteira
+
+# Função para calcular o nível de risco com base na volatilidade
+def calcular_nivel_risco_volatilidade(volatilidade):
+    # Classificar o nível de risco baseado em faixas de volatilidade
+    if volatilidade < 0.01:  # Menor que 1%
+        return 1  # Baixo risco
+    elif volatilidade < 0.02:  # Entre 1% e 2%
+        return 2  # Moderado
+    elif volatilidade < 0.03:  # Entre 2% e 3%
+        return 3  # Neutro
+    elif volatilidade < 0.04:  # Entre 3% e 4%
+        return 4  # Alto
+    else:  # Maior que 4%
+        return 5  # Muito Alto
 
 # Função para plotar o termômetro de risco
 def plotar_termometro_de_risco(nivel_risco):
@@ -861,7 +896,7 @@ def plotar_termometro_de_risco(nivel_risco):
         title={'text': "Nível de Risco da Carteira", 'font': {'size': 18, 'color': 'white'}},
         gauge={
             'axis': {'range': [0, 5], 'tickvals': [1, 2, 3, 4, 5], 'ticktext': ['Baixo', 'Moderado', 'Neutro', 'Alto', 'Muito Alto'], 'tickcolor': 'white'},
-            'bar': {'color': "black"},  # Barra interna preta
+            'bar': {'color': "black"},
             'steps': [
                 {'range': [0, 1], 'color': "lightblue"},
                 {'range': [1, 2], 'color': "lightgreen"},
@@ -880,69 +915,29 @@ def plotar_termometro_de_risco(nivel_risco):
     fig.update_layout(
         height=400,
         margin=dict(l=20, r=20, t=50, b=20),
-        template='plotly_dark',  # Template escuro
+        template='plotly_dark',
         font=dict(size=14, color="white"),
-        plot_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
-        paper_bgcolor="rgba(0,0,0,0)",  # Fundo transparente
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
 
     # Exibir o gráfico no Streamlit
     st.plotly_chart(fig)
 
-# Função para calcular o nível de risco com base na volatilidade
-def calcular_nivel_risco_volatilidade(retornos_diarios):
-    volatilidade = retornos_diarios.std()  # Calcula o desvio padrão dos retornos diários
-    
-    # Classificar o nível de risco baseado em faixas de volatilidade
-    if volatilidade < 0.01:  # Menor que 1%
-        return 1  # Baixo risco
-    elif volatilidade < 0.02:  # Entre 1% e 2%
-        return 2  # Moderado
-    elif volatilidade < 0.03:  # Entre 2% e 3%
-        return 3  # Neutro
-    elif volatilidade < 0.04:  # Entre 3% e 4%
-        return 4  # Alto
-    else:  # Maior que 4%
-        return 5  # Muito Alto
+# Função principal para calcular e exibir o risco com base na volatilidade ponderada
+def calcular_plotar_risco_com_volatilidade(carteira):
+    # Calcular correlação, covariância e pesos dos ativos na carteira
+    df_retornos, matriz_corr, matriz_cov, carteira_com_pesos = calcular_correlacao_covariancia(carteira)
 
-# Função para calcular o retorno diário e aplicar o termômetro de risco
-def calcular_plotar_risco_com_volatilidade(carteira_com_pesos):
-    data_fim = pd.Timestamp.now().date()
-    data_inicio = data_fim - pd.DateOffset(months=36)  # Últimos 36 meses
-    
-    retorno_diario_carteira = []
-    
-    for index, row in carteira_com_pesos.iterrows():
-        ativo = row['Ativo']
-        peso = row['Peso']
-        try:
-            # Baixar os dados de preço ajustado
-            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
-            if dados.empty:
-                st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker.")
-            else:
-                # Preencher valores faltantes
-                dados = dados.interpolate(method='linear')
-                
-                # Calcular o retorno diário do ativo
-                retorno_diario_ativo = dados.pct_change().dropna()
-                
-                # Ponderar os retornos diários pelo peso na carteira
-                retorno_diario_carteira.append(retorno_diario_ativo * peso)
+    if not matriz_cov.empty and not carteira_com_pesos.empty:
+        # Calcular a volatilidade da carteira
+        volatilidade_carteira = calcular_volatilidade_carteira(carteira_com_pesos, matriz_cov)
         
-        except Exception as e:
-            st.error(f"Erro ao obter dados para o ativo {ativo}: {str(e)}")
-    
-    if retorno_diario_carteira:
-        # Combinar todos os retornos ponderados dos ativos
-        retorno_diario_carteira = pd.concat(retorno_diario_carteira, axis=1).sum(axis=1).dropna()
-        
-        # Calcular o nível de risco com base na volatilidade (desvio padrão)
-        nivel_risco = calcular_nivel_risco_volatilidade(retorno_diario_carteira)
+        # Determinar o nível de risco com base na volatilidade calculada
+        nivel_risco = calcular_nivel_risco_volatilidade(volatilidade_carteira)
         
         # Plotar o termômetro de risco
         plotar_termometro_de_risco(nivel_risco)
-        
     else:
         st.warning("Não foi possível calcular o nível de risco devido a problemas com os dados dos ativos.")
 
