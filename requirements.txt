@@ -6,4 +6,4 @@ scipy==1.14.0
 seaborn==0.13.2
 streamlit==1.36.0
 streamlit_option_menu==0.3.13
-yfinance==0.2.40
+yfinance==0.2.54
