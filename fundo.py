@@ -17,8 +17,6 @@ import requests
 import matplotlib.dates as mdates
 
 
-
-
 # Agora você pode usar norm.ppf() na sua função calcular_var_parametrico
 
 
@@ -360,7 +358,7 @@ if pagina == "Carteira":
             # confere se o aporte foi verificado e extrai os preços de fechamento ajustados do período entre a o dia após a ultima data do patrimonio e a ultima data do yahoo finance
             elif carteira.loc[i, "Verificado"] == True:
                 fechamentos = yf.download(
-                    carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(days=1)
+                    carteira.loc[i, "Ativo"], start=(ultima_data_patrimonio) + timedelta(days=1), auto_adjust=False
                 )["Adj Close"]
 
                 fechamentos = fechamentos * carteira.loc[i, "Quantidade"] # calcula o valor do patrimonio para cada dia do período
@@ -453,7 +451,7 @@ for i in range(len(carteira)): # realiza o loop a seguir para cada aporte regist
         # confere se o aporte foi verificado e extrai os preços de fechamento ajustados do período entre a o dia após a ultima data do patrimonio e a ultima data do yahoo finance
         elif carteira.loc[i, "Verificado"] == True:
             fechamentos = yf.download(
-                carteira.loc[i, "Ativo"], start=ultima_data_patrimonio + timedelta(days=1)
+                carteira.loc[i, "Ativo"], start=ultima_data_patrimonio + timedelta(days=1),auto_adjust=False
             )["Adj Close"]
 
             fechamentos = fechamentos * carteira.loc[i, "Quantidade"]  # calcula o valor do patrimonio para cada dia do período
@@ -527,7 +525,7 @@ if pagina == "Posição":
     data_atual = datetime.now().date()
 
     # Baixa os dados do IBOV
-    dados_ibov = yf.download("^BVSP", start=data_inicio, end=data_atual)["Adj Close"]
+    dados_ibov = yf.download("^BVSP", start=data_inicio, end=data_atual,auto_adjust=False)["Adj Close"]
     dados_ibov = dados_ibov.reset_index()
     dados_ibov["Date"] = dados_ibov["Date"].apply(lambda x: x.date())
     dados_ibov = dados_ibov.set_index("Date").squeeze()
@@ -648,7 +646,7 @@ def calcular_plotar_drawdown_carteira(carteira_com_pesos):
         ativo = row['Ativo']
         peso = row['Peso']
         try:
-            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            dados = yf.download(ativo, start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
             if dados.empty:
                 st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker ou tente novamente mais tarde.")
             else:
@@ -751,7 +749,7 @@ def calcular_correlacao_covariancia(carteira):
     for ativo in carteira_com_pesos['Ativo'].unique():
         try:
             # Obtenção dos dados ajustados de fechamento
-            ativo_data = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            ativo_data = yf.download(ativo, start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
             if ativo_data.empty:
                 avisos.append(f"Dados vazios para o ativo {ativo}. Verifique o ticker.")
             else:
@@ -976,7 +974,7 @@ def calcular_beta_carteira(carteira, ticker_referencia='^BVSP'):
 
     # Obter dados históricos do índice de referência
     try:
-        dados_referencia = yf.download(ticker_referencia, start=data_inicio, end=data_fim)['Adj Close']
+        dados_referencia = yf.download(ticker_referencia, start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
         if dados_referencia.empty:
             st.warning(f"Dados vazios para o índice de referência {ticker_referencia}. Verifique o ticker ou tente novamente mais tarde.")
             return None
@@ -1024,7 +1022,7 @@ def calcular_retornos_carteira(carteira, data_inicio, data_fim):
     for ativo in carteira['Ativo'].unique():
         try:
             # Obter os dados do Yahoo Finance para cada ativo na carteira
-            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            dados = yf.download(ativo, start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
             if dados.empty:
                 st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker ou tente novamente mais tarde.")
             else:
@@ -1134,7 +1132,7 @@ def plotar_comparacao_carteira_ibov(carteira):
         ativo = row['Ativo']
         peso = row['Peso']
         try:
-            dados = yf.download(ativo, start=data_inicio, end=data_fim)['Adj Close']
+            dados = yf.download(ativo, start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
             if dados.empty:
                 st.warning(f"Dados vazios para o ativo {ativo}. Verifique o ticker ou tente novamente mais tarde.")
             else:
@@ -1167,7 +1165,7 @@ def plotar_comparacao_carteira_ibov(carteira):
 
         # Obter dados históricos ajustados do IBOV
         try:
-            dados_ibov = yf.download('^BVSP', start=data_inicio, end=data_fim)['Adj Close']
+            dados_ibov = yf.download('^BVSP', start=data_inicio, end=data_fim,auto_adjust=False)['Adj Close']
             dados_ibov = dados_ibov.interpolate(method='linear')
             dados_ibov = dados_ibov.reindex(retorno_acumulado_carteira.index)
             dados_ibov = dados_ibov.interpolate(method='linear')
